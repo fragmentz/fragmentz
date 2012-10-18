@@ -1,7 +1,7 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
 define(function(require) {
-  var uri = require('../uri'),
+  var uri = require('./mmc/uri'),
     cssParser = require('./css-parser/css-parser'),
     cssTranslator = require('./css-parser/css-translator'),
     document = window.document;
