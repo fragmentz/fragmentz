@@ -17,7 +17,7 @@ Very much under development. Consider this completely experimental.
 
 - create AMD plugins for `html` and `css`.  the code in test-frags.html shows roughly what these plugins would do.
 
-- the standalone css parser will still be needed for optimization runs (eg. through r.js) on node.  The existing grammars aren't fully correct for our needs, and so they need to be rewritten to match the (css spec)[http://www.w3.org/TR/CSS21/syndata.html].
+- the standalone css parser will still be needed for optimization runs (eg. through r.js) on node.  The existing grammars aren't fully correct for our needs, and so they need to be rewritten to match the [css spec](http://www.w3.org/TR/CSS21/syndata.html).
 
 ## Long Range Goals
 - provide the option (in `html.html()` and `html.css()`) to do "sandboxing", where ids and css-classnames are prefixed to provide uniqueness.  This must be optional (off by default), and the prefix must be specified externally, so that it will be possible to rewrite an html fragment and a css fragment with matching prefixes. (note: this needs more thought. so think first, then write code).
