@@ -6,83 +6,83 @@ define(function(require) {
     cssTranslator = require('./css-parser/css-translator'),
     document = window.document;
 
-	var uriElements = [
-		['a', 'href'],
-		['applet','codebase'],
-		['area','href'],
-		['base','href'],
-		['blockquote','cite'],
-		['body','background'],
-		['del','cite'],
-		['form','action'],
-		['frame','longdesc'], ['frame','src'],
-		['head','profile'],
-		['iframe','longdesc'], ['iframe','src'],
-		['img','longdesc'], ['img','src'], ['img','usemap'],
-		['input','src'], ['input','usemap'],
-		['ins','cite'],
-		['link','href'],
-		['object','classid'],['object','codebase'],['object','data'],['object','usemap'],
-		['q','cite'],
-		['script','src'],
-		['audio','src'],
-		['button','formaction'],
-		['command','icon'],
-		['embed','src'],
-		['html','manifest'],
-		['input','formaction'],
-		['source','src'],
-		['video','poster'],['video','src'],
-	].reduce(function(prev, cur, idx, all){
-		var elName = String(cur[0]).toLowerCase(),
-			atName = String(cur[1]).toLowerCase(),
-			entry = prev[elName] || {};
-		prev[elName] = entry;
-		entry[atName] = true;
-		return prev;
-	}, {});
+  var uriElements = [
+    ['a', 'href'],
+    ['applet','codebase'],
+    ['area','href'],
+    ['base','href'],
+    ['blockquote','cite'],
+    ['body','background'],
+    ['del','cite'],
+    ['form','action'],
+    ['frame','longdesc'], ['frame','src'],
+    ['head','profile'],
+    ['iframe','longdesc'], ['iframe','src'],
+    ['img','longdesc'], ['img','src'], ['img','usemap'],
+    ['input','src'], ['input','usemap'],
+    ['ins','cite'],
+    ['link','href'],
+    ['object','classid'],['object','codebase'],['object','data'],['object','usemap'],
+    ['q','cite'],
+    ['script','src'],
+    ['audio','src'],
+    ['button','formaction'],
+    ['command','icon'],
+    ['embed','src'],
+    ['html','manifest'],
+    ['input','formaction'],
+    ['source','src'],
+    ['video','poster'],['video','src'],
+  ].reduce(function(prev, cur, idx, all){
+    var elName = String(cur[0]).toLowerCase(),
+      atName = String(cur[1]).toLowerCase(),
+      entry = prev[elName] || {};
+    prev[elName] = entry;
+    entry[atName] = true;
+    return prev;
+  }, {});
 
-	/**
-	* Convert rel uris to abs uris in an html fragment, using
-	* provided baseUri.  The fragment is modified in-place,
-	* and returned.
-	*/
-	function rebase(frag, baseUri) {
-	  var baseUri = uri.parseUri(baseUri);
-		walkHtml(frag, 1, function(el) {
-			var entry = uriElements[String(el.nodeName).toLowerCase()];
-			if (!entry) { return; }
-			for(var i=0,len=el.attributes.length; i<len; ++i) {
-				var attr = el.attributes[i];
-				if( entry[String(attr.name).toLowerCase()] ) {
-					attr.value = uri.resolveUri(attr.value, baseUri);
-				}
-			}
-		});
-		return frag;
-	}
+  /**
+  * Convert rel uris to abs uris in an html fragment, using
+  * provided baseUri.  The fragment is modified in-place,
+  * and returned.
+  */
+  function rebase(frag, baseUri) {
+    var baseUri = uri.parseUri(baseUri);
+    walkHtml(frag, 1, function(el) {
+      var entry = uriElements[String(el.nodeName).toLowerCase()];
+      if (!entry) { return; }
+      for(var i=0,len=el.attributes.length; i<len; ++i) {
+        var attr = el.attributes[i];
+        if( entry[String(attr.name).toLowerCase()] ) {
+          attr.value = uri.resolveUri(attr.value, baseUri);
+        }
+      }
+    });
+    return frag;
+  }
 
-	/**
-	* visits each element that is a descendant of the given fragment.
-	*
-	* @param frag : HtmlDocumentFragment | HtmlElement
-	* @param whatToShow : Number - (optional) bitmask from NodeFilter SHOW_*
-	*   defaults to NodeFilter.SHOW_ELEMENT
-	* @param fn : Function - called once with each element.
-	*
-	* @return the fragment that was passed as `frag`
-	*
-	* EXAMPLE
-	*   walkHtml(document.body, visitor, (NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT));
-	*   function visitor(element, frag) {
-	*     console.log(element.nodeName);
-	*   }
-	*
-	*
-	*/
-	function walkHtml(frag, whatToShow, fn) {
-	  fn = arguments[arguments.length-1];
-	  if (isNaN(whatToShow)) { whatToShow = NodeFilter.SHOW_ELEMENT }
+  /**
+  * visits each element that is a descendant of the given fragment.
+  *
+  * @param frag : HtmlDocumentFragment | HtmlElement
+  * @param whatToShow : Number - (optional) bitmask from NodeFilter SHOW_*
+  *   defaults to NodeFilter.SHOW_ELEMENT
+  * @param fn : Function - called once with each element.
+  *
+  * @return the fragment that was passed as `frag`
+  *
+  * EXAMPLE
+  *   walkHtml(document.body, visitor, (NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT));
+  *   function visitor(element, frag) {
+  *     console.log(element.nodeName);
+  *   }
+  *
+  *
+  */
+  function walkHtml(frag, whatToShow, fn) {
+    fn = arguments[arguments.length-1];
+    if (isNaN(whatToShow)) { whatToShow = NodeFilter.SHOW_ELEMENT }
     var treeWalker = document.createTreeWalker(frag, whatToShow, null, false);
     while(treeWalker.nextNode()) fn(treeWalker.currentNode, frag);
   }
@@ -121,7 +121,7 @@ define(function(require) {
           if (n[0] !== 'uri') return;
           var val = n[1][1];
           n[1][1] = uri.resolveUri( val, baseUri, { allowInitialDots:true });
-					console.log("resolved uri: ", val+ ' --> '+ n[1][1]);
+          console.log("resolved uri: ", val+ ' --> '+ n[1][1]);
         });
       }
       return new CSSFragment.createFromParse(err, (tree||cssStr));
@@ -313,10 +313,10 @@ define(function(require) {
     walkCss(self.tree, fn, type);
   }
 
-	return {
-	  rebase : rebase,
-	  walk : walkHtml,
-		html : html,
-		css : css,
-	}
+  return {
+    rebase : rebase,
+    walk : walkHtml,
+    html : html,
+    css : css,
+  }
 });

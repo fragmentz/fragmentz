@@ -3,16 +3,16 @@
 <script>
   delete require;
   requirejs.config({
-		paths: {
+    paths: {
       'text' : './require-text'
     },
-	});
+  });
 
-	define('underscore', [], function() { return _.noConflict() });
+  define('underscore', [], function() { return _.noConflict() });
 
   define('main',[],function(require) {
     var html = require('../html');
-		var baseUri;
+    var baseUri;
 
     // a `css!` plugin should wrap up the next 3 lines into a single require call
     var cssTxt = require('text!./sample-data/style/small.css');

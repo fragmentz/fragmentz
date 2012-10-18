@@ -32,11 +32,11 @@ define(function(require) {
     return new_path;
   }
 
-	function uri() {
-	}
-	uri.prototype.toString = function() {
-		return formatUri(this);
-	}
+  function uri() {
+  }
+  uri.prototype.toString = function() {
+    return formatUri(this);
+  }
 
   var rxUriParts = /^(?:([^:\/\?#]*):)?(?:\/\/([^\/\?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/;
   function parseUri( _uri ) {
@@ -134,7 +134,7 @@ define(function(require) {
     base = parseUri(base);
 
     //uri = _.extend({}, parseUri(uri));
-		uri = Object.create(parseUri(uri));
+    uri = Object.create(parseUri(uri));
 
     uri.path = uri.path || '';
 
