@@ -1,0 +1,109 @@
+<script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.6/require.min.js" ></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore.js"></script>
+<script>
+  delete require;
+  requirejs.config({
+    paths: {
+      'text' : './require-text'
+    },
+	});
+
+	define('underscore', [], function() { return _.noConflict() });
+
+  define('main',[],function(require) {
+    var html = require('../html');
+		var baseUri;
+
+    // a `css!` plugin should wrap up the next 3 lines into a single require call
+    var cssTxt = require('text!./sample-data/style/small.css');
+    baseUri = require.toUrl('./sample-data/style/small.css');
+    var css = html.css(cssTxt, baseUri);
+    console.log('small.css, using baseUri: ', baseUri);
+    console.log(css);
+
+    // a `css!` plugin should wrap up the next 3 lines into a single require call
+    var cssTxtLarge = require('text!./sample-data/style/large.css');
+    baseUri = require.toUrl('./sample-data/style/large.css');
+    var css2 = html.css(cssTxtLarge, baseUri);
+    console.log('large.css, using baseUri: ', baseUri);
+    console.log(css2);
+
+    // a `html!` plugin should wrap up the next 3 lines into a single require call.
+    var htmlTxt = require('text!./sample-data/sample1.html');
+    baseUri = require.toUrl('./sample-data/sample1.html');
+    var frag = html.html(htmlTxt, baseUri);
+    console.log('sample1.html, using baseUri: ', baseUri);
+    console.log(frag);
+
+    window.doAttach = function(a) {
+      switch(a) {
+        case 1:
+          css.attach();
+          break;
+        case 2:
+          css2.attach();
+          break;
+        case 3:
+          var el = document.querySelectorAll('#fragAttach')[0];
+          el.innerHTML = '';
+          var f = frag.cloneNode(true);
+          console.log("appending", f, el);
+          el.appendChild(f);
+          console.log("appended", f, el);
+          break;
+      }
+    };
+    window.doDetach = function(a) {
+      switch(a) {
+        case 1:
+          css.detach();
+          break;
+        case 2:
+          css2.detach();
+          break;
+        case 3:
+          var el = document.querySelectorAll('#fragAttach')[0];
+          el.innerHTML = '';
+          break;
+      }
+    }
+
+  });
+  requirejs(['main']);
+
+</script>
+
+<p>The css and html fragments below are loaded from the "<a href="./sample-data/">./sample-data</a>" directory.
+They all embed resources (images) using relative paths.  The logic demonstrated
+in this page loads these external fragments, and rewrites all the relative paths
+into absolute paths based on the location from which the fragments were loaded.
+
+<p>As a result, when the fragments are attached to this html page (using the
+various buttons below), the images resolve correctly, despite the fact this
+page is *not* co-located with the fragments in url-space.
+
+<p>The test includes a very large css file, which does take a few seconds
+to load and process. The page won't respond until the processing is complete
+
+<hr>
+<div class="test-div">
+--Test DIV--
+</div>
+
+<button id="btnAttach1" onclick="doAttach(1)">Attach CSS small</button>
+<button id="btnDetach1" onclick="doDetach(1)">Detach CSS small</button>
+(when attached, there should be a big green check above in --Test DIV--)
+
+<hr>
+<button id="btnAttach2" onclick="doAttach(2)">Attach CSS large</button>
+<button id="btnDetach2" onclick="doDetach(2)">Detach CSS large</button>
+(big css file. no visible effect.)
+
+<hr>
+<button id="btnAttach3" onclick="doAttach(3)">Attach html</button>
+<button id="btnDetach3" onclick="doDetach(3)">Detach html</button>
+(html will attach below. it is also affected by the small.css, if attached above.)
+
+<div id="fragAttach">
+-- html fragment will attach here --
+</div>

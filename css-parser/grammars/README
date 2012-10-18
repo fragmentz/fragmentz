@@ -1,0 +1,31 @@
+
+## Code Generation (NB)
+The grammars (*.ometajs) in this directory can be built with ometajs
+the executable for which is linked from the `bin/` directory. ometajs
+requires a working install of nodejs.
+
+The Makefile will build `.js` files from the `.ometajs` files.
+Unfortunately, these js files are not ready, "out of the box", for 
+use in a browser.  
+
+For now, the conversion process is manual.  Minor changes need to 
+be made to the require statements; and each module needs to wrapped
+for AMD.  If you just copy the generated js files into the parent
+directory, without making the necessary changes, **it won't work**. 
+
+Also, a few supporting scripts are required from ometajs, in order 
+for the compiled grammars to work at runtime.  It's expected that 
+these scripts will be copied manually, into the appropriate location 
+in the web project, as part of the conversion process. (the necessary
+scripts have already been copied, and are located in ../ometajs/runtime).
+
+
+## A Note on the Grammars Themselves
+The grammars were taken wholesale from (cssp)[https://github.com/css/cssp].
+These grammars are not really fully correct, and need to be 
+re-written to match the (css spec)[http://www.w3.org/TR/CSS21/syndata.html].
+As it stands, the cssp grammars will parse fully valid CSS.  However,
+they fail to parse invalid CSS, which is a violation of the spec.  It's
+also a particularly annoying non-feature for a translator like this.
+
+

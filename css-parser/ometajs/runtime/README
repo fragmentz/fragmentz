@@ -1,0 +1,9 @@
+These files were copied from the ometajs project.
+AbstractGrammar and AbstractParser are the minimal runtime 
+files needed to support basic ometajs-generated parsers.
+BSJS*.js are supplemental parsers that provide ometa
+built-in base classes.  They are only required if the
+compiled grammer uses them.
+
+util is a tiny shim for the nodejs `util.inherits` function.
+

@@ -1,0 +1,9 @@
+The files, "css-*.js", were generated from ometajs grammars, using 
+ometajs (https://github.com/veged/ometa-js).  The files were then
+modified slightly, by hand, so that they will run in a web browser
+using an AMD loader.
+
+Also, the requisite runtime scripts were copied from the ometajs, 
+project into the local dir, "ometajs/runtime". These scripts were
+also "doctored" by hand, to support the AMD loader environment.
+

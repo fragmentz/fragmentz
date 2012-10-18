@@ -1,0 +1,118 @@
+
+.test-div {
+	background: url("img/check.png") no-repeat;
+	width: 100px;
+	height: 100px;
+	border: 1px solid yellow;
+}
+
+.mic-setup.dialog.wiz .step {
+	-test: wombat 32px stuff morestuff url("../../abc/foo.png");
+	position: absolute;
+	top:0; left:0; right:0;
+	overflow: hidden;
+	z-index: -1;
+	opacity: 0;
+}
+.mic-setup.dialog.wiz .step.visible {
+	position: relative;
+	z-index: -1;
+	opacity: 1;
+}
+.mic-setup.dialog.wiz .step {
+	color: #333;
+}
+.mic-setup.dialog.wiz .step img {
+	vertical-align: bottom;
+	margin: 0 -1px;
+}
+.mic-setup.dialog.wiz .step p b {
+	color: green;
+}
+
+.mic-setup .step-loading div {
+	margin: 75px auto;
+	text-align: center;
+}
+/* check privs */
+
+.mic-setup .step-checkprivs .instructions1 {
+	margin: 10px;
+}
+
+.mic-setup .step-checkprivs .instructions0 {
+	display: none;
+	margin:10px;
+}
+.mic-setup .step-checkprivs .instructions0 .check {
+	position: relative;
+	z-index: -1;
+	margin: -36px -12px 0 -12px !important;
+	width: 36px; height: 36px;
+}
+
+.mic-setup .step-checkprivs.its-right .instructions1 {
+	display:none;
+}
+.mic-setup .step-checkprivs.its-right .instructions0 {
+	display:block;
+}
+.mic-setup .step-checkprivs .flashUiContainer {
+	float:right;
+	width: 213px;
+	height: 136px;
+	overflow:hidden;
+	margin: 0 10px;
+}
+
+
+/* sound check */
+
+.mic-setup .step-soundcheck {
+	overflow: hidden;
+	height: 265px;
+}
+.mic-setup .step-soundcheck .row {
+	display: block;
+	margin: 10px 10px;
+}
+.mic-setup .step-soundcheck .row label {
+	display: inline-block;
+	width: 130px;
+}
+.mic-setup .step-soundcheck .row .rowbody {
+	display: inline-block;
+	margin: 0 20px 0 10px;
+}
+
+.mic-setup .step-soundcheck .row.gain-ctl .rowbody {
+	width: 200px;
+}
+.mic-setup .step-soundcheck .row.gain-ctl .rowbody > * {
+	position: relative;
+	width: 100%;
+}
+.mic-setup .step-soundcheck .row.rec-test .rowbody {
+	display: block;
+	margin: 10px 20px;
+}
+
+.mic-setup .step-soundcheck .level-ind {
+	height: 10px;
+	border: 1px solid #ccc;
+}
+.mic-setup .step-soundcheck .level-ind > * {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	bottom: 0;
+}
+.mic-setup .step-soundcheck .level-ind > .green {
+	background: green;
+	z-index: 100;
+}
+.mic-setup .step-soundcheck .level-ind > .red {
+	background: red;
+	z-index: 50;
+}
+

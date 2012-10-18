@@ -1,0 +1,36 @@
+<script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.6/require.min.js" ></script>
+<script>
+  requirejs.config({
+    baseUrl : '',
+    paths: {
+      'html' : '..',
+    },
+  });
+
+  requirejs([
+    'html/css-parser/css-parser','html/css-parser/css-translator',
+    'text!small.css', 'text!large.css'
+  ], function(parser,translator,smallcss,largecss) {
+
+    function handleErr(m,i) {
+      console.error("--- ERROR: \n", m.message.substr(0,80), '...', m.message.substr(-80));
+    }
+
+    console.log(smallcss);
+
+    var tree = parser.matchAll(smallcss, ['stylesheet'], undefined, handleErr);
+    var str = translator.match(tree, 'stylesheet', undefined, handleErr);
+    console.log('tree: '); console.dir(tree);
+    console.log('str: '); console.log(str);
+    console.log("equal?", !!(smallcss === str));
+
+/*
+  un-comment for access to the parser in the js console
+
+    window.cssparser = parser;
+    window.csstranslator = translator;
+    window.csstxt_small = smallcss;
+    window.csstxt_large = largecss;
+*/
+  });
+</script>
