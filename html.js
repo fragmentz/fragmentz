@@ -317,6 +317,6 @@ define(function(require) {
     rebase : rebase,
     walk : walkHtml,
     html : html,
-    css : css,
+    css : css
   }
 });
