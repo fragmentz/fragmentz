@@ -108,8 +108,9 @@ define(function(require) {
   * create a CSSFragment from the given css string.
   * if baseUri is given, then rewrite any relative
   * urls in the fragment, to abs urls, accordingly.
+  * Uses the external css parser.
   */
-  function css(cssStr, baseUri) {
+  function cssFragUsingExternal(cssStr, baseUri) {
     var err = null;
     if (baseUri != null) {
       baseUri = uri.parseUri(baseUri);
@@ -127,6 +128,170 @@ define(function(require) {
       return new CSSFragment.createFromParse(err, (tree||cssStr));
     }
     return new CSSFragment.createFromStr(cssStr);
+  }
+
+  /**
+   * Creates a CSSFragment from the given css string.
+   * If externalParse is true, pass off to
+   * cssFragUsingExternal.
+   * If baseUri is given, then rewrite any relative
+   * urls in the fragment, to abs urls, accordingly.
+   * If prefix is given, apply the prefix to the css
+   * selectors.
+   * Uses the DOM to manipulate the css once attached.
+   */
+  function css(cssStr, baseUri, prefix, externalParse) {
+    var cssFrag = null
+        , stylesheet = null
+        , ruleChanges = {};
+
+    if ( externalParse ) {
+      return cssFragUsingExternal(cssStr, baseUri);
+    }
+
+    cssFrag = new CSSFragment.createFromStr(cssStr)
+    cssFrag.attach(true);
+    
+    if ( cssFrag.ticket.stylesheet ) {
+      // IE only
+      stylesheet = cssFrag.ticket.stylesheet;
+    } else {
+      // Everyone else
+      stylesheet = cssFrag.ticket.node.parentElement.sheet;
+    }
+    
+    stylesheet.disabled = true;
+
+    for ( var r = 0, rLen = stylesheet.cssRules.length; r < rLen; r += 1 ) {
+      ruleChanges = {};
+
+      if ( prefix ) {
+        newRule = getPrefixedRule(prefix, stylesheet.cssRules[r]);
+        
+        stylesheet.insertRule(newRule, r);
+        stylesheet.deleteRule(r + 1);
+      }
+
+      if ( baseUri && stylesheet.cssRules[r].style ) {
+        for ( var s = 0, sLen = stylesheet.cssRules[r].style.length; s < sLen; s += 1 ) {
+          jsProperty = getJSPropertyName(stylesheet.cssRules[r].style[s])
+          newVal = fixUrlPath(stylesheet.cssRules[r].style[jsProperty], baseUri);
+
+          if ( newVal ) {
+            ruleChanges[jsProperty] = newVal;
+          }
+        }
+
+        // Apply all changes at once. This is neccessary for Safari.
+        for ( var key in ruleChanges ) {
+          stylesheet.cssRules[r].style[key] = ruleChanges[key];
+        }
+      }
+
+    }
+
+    return cssFrag;
+
+  }
+
+  /**
+   * Convert a CSS selector with hyphens to the
+   * equivelent JavaScript property.
+   * e.g. convert background-image to backgroundImage
+   */
+  function getJSPropertyName(cssProperty) {
+    var pieces = cssProperty.split('-');
+
+    if ( pieces[0] === cssProperty ) {
+      return cssProperty;
+    }
+    
+    for ( var i = 1, len = pieces.length; i < len; i += 1 ) {
+      pieces[i] = pieces[i][0].toUpperCase() + pieces[i].slice(1);
+    }
+
+    return pieces.join('');
+  }
+
+  /**
+   * Replace the url portion of a CSS rule with the
+   * rewritten uri.
+   */
+  function fixUrlPath(cssValue, baseUri) {
+    var cssValue = (typeof(cssValue) === 'string') ? cssValue : ''
+      , startPos = cssValue.search(/url\(/)
+      , endPos = cssValue.search(/\)/)
+      , replaceStr = ''
+      , relativePath = '';
+
+    if ( startPos === -1 || endPos === -1 ) {
+      return false
+    }
+
+    replaceStr = cssValue.slice(startPos + 4, endPos);
+    relativePath = revertUri(window.location.href, replaceStr);
+
+    return cssValue.replace(replaceStr, uri.resolveUri(relativePath, baseUri, { allowInitialDots:true }).path);
+  }
+
+  /**
+   * The browser will convert all relative paths to
+   * an absolute path. This will convert the
+   * absolute path back to it's relative counterpart
+   * given a reference path.
+   */
+  function revertUri(ref, _uri) {
+    var ref = ref.replace(/http:\/\/|https:\/\//, '')
+      , uri = _uri.replace(/http:\/\/|https:\/\//, '')
+      , refParts = []
+      , uriParts = []
+      , stopIndex = 0
+      , uriLength = 0
+      , refLength = 0
+      , finalUri = '';
+
+    if ( uri === _uri ) {
+      return uri.replace(/["']/g, '');
+    }
+
+    uri = uri.replace(/["']/g, '');
+    refParts = ref.split('/');
+    uriParts = uri.split('/');
+    refParts.pop();
+    refLength = refParts.length;
+    uriLength = uriParts.length - 1;
+
+    for ( var i = 0, len = (uriLength > refLength) ? uriLength : refLength; i < len; i += 1 ) {
+
+      stopIndex = i;
+
+      if ( uriParts[i] !== refParts[i] && len === refLength ) {
+        finalUri += '../';
+      } else if ( uriParts[i] !== refParts[i] && len === uriLength ) {
+        break;
+      }
+    }
+
+    finalUri += uriParts.splice(stopIndex, uriParts.length - 1).join('/');
+
+    return finalUri;
+  }
+
+
+  /**
+   * Get a new CSS rule with proper selector prefixing.
+   */
+  function getPrefixedRule(prefix, cssRule) {
+    var newSelector = cssRule.selectorText.replace(/[#.][A-Za-z0-9_-]+/g, function(match) {
+      switch (match.charAt(0)) {
+        case '#':
+          return '.' + prefix + '__id-' + match.substr(1);
+        case '.':
+          return '.' + prefix + match.substr(1);
+      }
+    });
+    
+    return cssRule.cssText.replace(cssRule.selectorText, newSelector);
   }
 
 
@@ -169,9 +334,9 @@ define(function(require) {
   * @param title :string (optional)
   * @param media :string (optional) the media type of the stylesheet
   */
-  function addCssText(cssStr, title, media){
+  function addCssText(cssStr, title, media, newElement){
     var el = styleElement;
-    if (!el) {
+    if (!el || newElement) {
       el = document.createElement('style');
       el.type = "text/css";
       el.media = media || 'screen';
@@ -196,7 +361,7 @@ define(function(require) {
       };
       el.appendChild(ticket.node);
     }
-    if (!styleElement) {
+    if (!styleElement || newElement) {
       document.getElementsByTagName('head')[0].appendChild(el);
       styleElement = el;
     }
@@ -262,12 +427,12 @@ define(function(require) {
   * attaches this css fragment to the dom.  throws an error if the
   * fragment is invalid for any reason.
   */
-  CSSFragment.prototype.attach = function attach() {
+  CSSFragment.prototype.attach = function attach(forceNewElement) {
     if (this.err) {
       throwError(this.err, this.errCtx)
     }
     if (this.ticket) { return; }
-    this.ticket = addCssText(this.css);
+    this.ticket = addCssText(this.css, null, null, true);
     console.log("CSSFragment.attach: ticket=", this.ticket);
   }
 
@@ -295,6 +460,26 @@ define(function(require) {
     }
     return tree;
   }
+
+  CSSFragment.prototype.enable = function() {
+    if ( this.ticket.stylesheet ) {
+      // IE only
+      this.ticket.stylesheet.disabled = false;
+    } else {
+      // Everyone else
+      this.ticket.node.parentElement.sheet.disabled = false;
+    }
+  };
+
+  CSSFragment.prototype.disable = function() {
+    if ( this.ticket.stylesheet ) {
+      // IE only
+      this.ticket.stylesheet.disabled = true;
+    } else {
+      // Everyone else
+      this.ticket.node.parentElement.sheet.disabled = true;
+    }
+  };
 
   /**
   * visit each node in the css doc's parse tree.  parse the doc if necessary.
