@@ -141,12 +141,20 @@ define(function(require) {
    * Uses the DOM to manipulate the css once attached.
    */
   function css(cssStr, baseUri, prefix, externalParse) {
-    var cssFrag = null
+    var urlRE = /url\((?!['|"]https?:\/\/)['|"]?(.*?)["|']?\)/g
+        , cssFrag = null
         , stylesheet = null
         , ruleChanges = {};
 
     if ( externalParse ) {
       return cssFragUsingExternal(cssStr, baseUri);
+    }
+
+    // Rewrite the URIs
+    if ( baseUri ) {
+      cssStr = cssStr.replace(urlRE, function(match, capture) {
+        return 'url("' + uri.resolveUri(capture, baseUri, { allowInitialDots: true }) + '")';
+      });
     }
 
     cssFrag = new CSSFragment.createFromStr(cssStr)
@@ -162,119 +170,19 @@ define(function(require) {
     
     stylesheet.disabled = true;
 
-    for ( var r = 0, rLen = stylesheet.cssRules.length; r < rLen; r += 1 ) {
-      ruleChanges = {};
-
-      if ( prefix ) {
+    // Apply prefixing to the CSS selectors
+    if ( prefix ) {
+      for ( var r = 0, rLen = stylesheet.cssRules.length; r < rLen; r += 1 ) {
         newRule = getPrefixedRule(prefix, stylesheet.cssRules[r]);
         
         stylesheet.insertRule(newRule, r);
         stylesheet.deleteRule(r + 1);
+
       }
-
-      if ( baseUri && stylesheet.cssRules[r].style ) {
-        for ( var s = 0, sLen = stylesheet.cssRules[r].style.length; s < sLen; s += 1 ) {
-          jsProperty = getJSPropertyName(stylesheet.cssRules[r].style[s])
-          newVal = fixUrlPath(stylesheet.cssRules[r].style[jsProperty], baseUri);
-
-          if ( newVal ) {
-            ruleChanges[jsProperty] = newVal;
-          }
-        }
-
-        // Apply all changes at once. This is neccessary for Safari.
-        for ( var key in ruleChanges ) {
-          stylesheet.cssRules[r].style[key] = ruleChanges[key];
-        }
-      }
-
     }
 
     return cssFrag;
 
-  }
-
-  /**
-   * Convert a CSS selector with hyphens to the
-   * equivelent JavaScript property.
-   * e.g. convert background-image to backgroundImage
-   */
-  function getJSPropertyName(cssProperty) {
-    var pieces = cssProperty.split('-');
-
-    if ( pieces[0] === cssProperty ) {
-      return cssProperty;
-    }
-    
-    for ( var i = 1, len = pieces.length; i < len; i += 1 ) {
-      pieces[i] = pieces[i][0].toUpperCase() + pieces[i].slice(1);
-    }
-
-    return pieces.join('');
-  }
-
-  /**
-   * Replace the url portion of a CSS rule with the
-   * rewritten uri.
-   */
-  function fixUrlPath(cssValue, baseUri) {
-    var cssValue = (typeof(cssValue) === 'string') ? cssValue : ''
-      , startPos = cssValue.search(/url\(/)
-      , endPos = cssValue.search(/\)/)
-      , replaceStr = ''
-      , relativePath = '';
-
-    if ( startPos === -1 || endPos === -1 ) {
-      return false
-    }
-
-    replaceStr = cssValue.slice(startPos + 4, endPos);
-    relativePath = revertUri(window.location.href, replaceStr);
-
-    return cssValue.replace(replaceStr, uri.resolveUri(relativePath, baseUri, { allowInitialDots:true }).path);
-  }
-
-  /**
-   * The browser will convert all relative paths to
-   * an absolute path. This will convert the
-   * absolute path back to it's relative counterpart
-   * given a reference path.
-   */
-  function revertUri(ref, _uri) {
-    var ref = ref.replace(/http:\/\/|https:\/\//, '')
-      , uri = _uri.replace(/http:\/\/|https:\/\//, '')
-      , refParts = []
-      , uriParts = []
-      , stopIndex = 0
-      , uriLength = 0
-      , refLength = 0
-      , finalUri = '';
-
-    if ( uri === _uri ) {
-      return uri.replace(/["']/g, '');
-    }
-
-    uri = uri.replace(/["']/g, '');
-    refParts = ref.split('/');
-    uriParts = uri.split('/');
-    refParts.pop();
-    refLength = refParts.length;
-    uriLength = uriParts.length - 1;
-
-    for ( var i = 0, len = (uriLength > refLength) ? uriLength : refLength; i < len; i += 1 ) {
-
-      stopIndex = i;
-
-      if ( uriParts[i] !== refParts[i] && len === refLength ) {
-        finalUri += '../';
-      } else if ( uriParts[i] !== refParts[i] && len === uriLength ) {
-        break;
-      }
-    }
-
-    finalUri += uriParts.splice(stopIndex, uriParts.length - 1).join('/');
-
-    return finalUri;
   }
 
 
@@ -293,7 +201,6 @@ define(function(require) {
     
     return cssRule.cssText.replace(cssRule.selectorText, newSelector);
   }
-
 
 
   ////////
