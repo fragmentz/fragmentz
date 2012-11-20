@@ -2,7 +2,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
 define(function(require) {
 
-  var _ = require('underscore');
+  //var _ = require('underscore');
 
   /**
   * normalize_path - removes all dot-segments (/./), and correctly resolves all '/../' segments in
@@ -209,7 +209,7 @@ define(function(require) {
     formatUri : formatUri,
     parseQueryString : parseQueryString,
     formatQueryString : formatQueryString,
-    merge_qs_values : merge_qs_values,
+    merge_qs_values : merge_qs_values
   }
 });
 
