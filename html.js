@@ -141,7 +141,7 @@ define(function(require) {
    * Uses the DOM to manipulate the css once attached.
    */
   function css(cssStr, baseUri, prefix, externalParse) {
-    var urlRE = /url\((?!['|"]https?:\/\/)['|"]?(.*?)["|']?\)/g
+    var urlRE = /url\(['"]?([^\/:'"\)]+(?:\/[^'"\)]*)?)['"]?\)/ig
         , cssFrag = null
         , stylesheet = null
         , ruleChanges = {};
