@@ -108,8 +108,9 @@ define(function(require) {
   * create a CSSFragment from the given css string.
   * if baseUri is given, then rewrite any relative
   * urls in the fragment, to abs urls, accordingly.
+  * Uses the external css parser.
   */
-  function css(cssStr, baseUri) {
+  function cssFragUsingExternal(cssStr, baseUri) {
     var err = null;
     if (baseUri != null) {
       baseUri = uri.parseUri(baseUri);
@@ -129,6 +130,77 @@ define(function(require) {
     return new CSSFragment.createFromStr(cssStr);
   }
 
+  /**
+   * Creates a CSSFragment from the given css string.
+   * If externalParse is true, pass off to
+   * cssFragUsingExternal.
+   * If baseUri is given, then rewrite any relative
+   * urls in the fragment, to abs urls, accordingly.
+   * If prefix is given, apply the prefix to the css
+   * selectors.
+   * Uses the DOM to manipulate the css once attached.
+   */
+  function css(cssStr, baseUri, prefix, externalParse) {
+    var urlRE = /url\(['"]?([^\/:'"\)]+(?:\/[^'"\)]*)?)['"]?\)/ig
+        , cssFrag = null
+        , stylesheet = null
+        , ruleChanges = {};
+
+    if ( externalParse ) {
+      return cssFragUsingExternal(cssStr, baseUri);
+    }
+
+    // Rewrite the URIs
+    if ( baseUri ) {
+      cssStr = cssStr.replace(urlRE, function(match, capture) {
+        return 'url("' + uri.resolveUri(capture, baseUri, { allowInitialDots: true }) + '")';
+      });
+    }
+
+    cssFrag = new CSSFragment.createFromStr(cssStr)
+    cssFrag.attach(true);
+    
+    if ( cssFrag.ticket.stylesheet ) {
+      // IE only
+      stylesheet = cssFrag.ticket.stylesheet;
+    } else {
+      // Everyone else
+      stylesheet = cssFrag.ticket.node.parentElement.sheet;
+    }
+    
+    stylesheet.disabled = true;
+
+    // Apply prefixing to the CSS selectors
+    if ( prefix ) {
+      for ( var r = 0, rLen = stylesheet.cssRules.length; r < rLen; r += 1 ) {
+        newRule = getPrefixedRule(prefix, stylesheet.cssRules[r]);
+        
+        stylesheet.insertRule(newRule, r);
+        stylesheet.deleteRule(r + 1);
+
+      }
+    }
+
+    return cssFrag;
+
+  }
+
+
+  /**
+   * Get a new CSS rule with proper selector prefixing.
+   */
+  function getPrefixedRule(prefix, cssRule) {
+    var newSelector = cssRule.selectorText.replace(/[#.][A-Za-z0-9_-]+/g, function(match) {
+      switch (match.charAt(0)) {
+        case '#':
+          return '.' + prefix + '__id-' + match.substr(1);
+        case '.':
+          return '.' + prefix + match.substr(1);
+      }
+    });
+    
+    return cssRule.cssText.replace(cssRule.selectorText, newSelector);
+  }
 
 
   ////////
@@ -169,9 +241,9 @@ define(function(require) {
   * @param title :string (optional)
   * @param media :string (optional) the media type of the stylesheet
   */
-  function addCssText(cssStr, title, media){
+  function addCssText(cssStr, title, media, newElement){
     var el = styleElement;
-    if (!el) {
+    if (!el || newElement) {
       el = document.createElement('style');
       el.type = "text/css";
       el.media = media || 'screen';
@@ -196,7 +268,7 @@ define(function(require) {
       };
       el.appendChild(ticket.node);
     }
-    if (!styleElement) {
+    if (!styleElement || newElement) {
       document.getElementsByTagName('head')[0].appendChild(el);
       styleElement = el;
     }
@@ -262,12 +334,12 @@ define(function(require) {
   * attaches this css fragment to the dom.  throws an error if the
   * fragment is invalid for any reason.
   */
-  CSSFragment.prototype.attach = function attach() {
+  CSSFragment.prototype.attach = function attach(forceNewElement) {
     if (this.err) {
       throwError(this.err, this.errCtx)
     }
     if (this.ticket) { return; }
-    this.ticket = addCssText(this.css);
+    this.ticket = addCssText(this.css, null, null, true);
     console.log("CSSFragment.attach: ticket=", this.ticket);
   }
 
@@ -296,6 +368,26 @@ define(function(require) {
     return tree;
   }
 
+  CSSFragment.prototype.enable = function() {
+    if ( this.ticket.stylesheet ) {
+      // IE only
+      this.ticket.stylesheet.disabled = false;
+    } else {
+      // Everyone else
+      this.ticket.node.parentElement.sheet.disabled = false;
+    }
+  };
+
+  CSSFragment.prototype.disable = function() {
+    if ( this.ticket.stylesheet ) {
+      // IE only
+      this.ticket.stylesheet.disabled = true;
+    } else {
+      // Everyone else
+      this.ticket.node.parentElement.sheet.disabled = true;
+    }
+  };
+
   /**
   * visit each node in the css doc's parse tree.  parse the doc if necessary.
   * all node types will be visited, unless `nodeType` indicates a specific
@@ -317,6 +409,6 @@ define(function(require) {
     rebase : rebase,
     walk : walkHtml,
     html : html,
-    css : css,
+    css : css
   }
 });

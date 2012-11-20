@@ -5,7 +5,7 @@
   requirejs.config({
     paths: {
       'text' : './require-text'
-    },
+    }
   });
 
   define('underscore', [], function() { return _.noConflict() });
@@ -17,16 +17,30 @@
     // a `css!` plugin should wrap up the next 3 lines into a single require call
     var cssTxt = require('text!./sample-data/style/small.css');
     baseUri = require.toUrl('./sample-data/style/small.css');
-    var css = html.css(cssTxt, baseUri);
+    var css = html.css(cssTxt, baseUri, null, true);
     console.log('small.css, using baseUri: ', baseUri);
     console.log(css);
 
     // a `css!` plugin should wrap up the next 3 lines into a single require call
     var cssTxtLarge = require('text!./sample-data/style/large.css');
     baseUri = require.toUrl('./sample-data/style/large.css');
-    var css2 = html.css(cssTxtLarge, baseUri);
+    var css2 = html.css(cssTxtLarge, baseUri, null, true);
     console.log('large.css, using baseUri: ', baseUri);
     console.log(css2);
+
+    // a `css!` plugin should wrap up the next 3 lines into a single require call
+    var cssTxt = require('text!./sample-data/style/small.css');
+    baseUri = require.toUrl('./sample-data/style/small.css');
+    var css3 = html.css(cssTxt, baseUri, null);
+    console.log('small.css, using baseUri: ', baseUri);
+    console.log(css3);
+
+    // a `css!` plugin should wrap up the next 3 lines into a single require call
+    var cssTxtLarge = require('text!./sample-data/style/large.css');
+    baseUri = require.toUrl('./sample-data/style/large.css');
+    var css4 = html.css(cssTxtLarge, baseUri, null);
+    console.log('large.css, using baseUri: ', baseUri);
+    console.log(css4);
 
     // a `html!` plugin should wrap up the next 3 lines into a single require call.
     var htmlTxt = require('text!./sample-data/sample1.html');
@@ -51,6 +65,12 @@
           el.appendChild(f);
           console.log("appended", f, el);
           break;
+        case 4:
+          css3.enable();
+          break;
+        case 5:
+          css4.enable();
+          break;
       }
     };
     window.doDetach = function(a) {
@@ -64,6 +84,12 @@
         case 3:
           var el = document.querySelectorAll('#fragAttach')[0];
           el.innerHTML = '';
+          break;
+        case 4:
+          css3.disable();
+          break;
+        case 5:
+          css4.disable();
           break;
       }
     }
@@ -90,6 +116,7 @@ to load and process. The page won't respond until the processing is complete
 --Test DIV--
 </div>
 
+<h4>CSS Using External Parser</h4>
 <button id="btnAttach1" onclick="doAttach(1)">Attach CSS small</button>
 <button id="btnDetach1" onclick="doDetach(1)">Detach CSS small</button>
 (when attached, there should be a big green check above in --Test DIV--)
@@ -99,6 +126,18 @@ to load and process. The page won't respond until the processing is complete
 <button id="btnDetach2" onclick="doDetach(2)">Detach CSS large</button>
 (big css file. no visible effect.)
 
+<hr>
+<h4>CSS Using The Browser's Own Facilities</h4>
+<button id="btnAttach4" onclick="doAttach(4)">Enable CSS small</button>
+<button id="btnDetach4" onclick="doDetach(4)">Disable CSS small</button>
+(when attached, there should be a big green check above in --Test DIV--)
+
+<hr>
+<button id="btnAttach5" onclick="doAttach(5)">Enable CSS large</button>
+<button id="btnDetach5" onclick="doDetach(5)">Disable CSS large</button>
+(big css file. no visible effect.)
+
+<h4>HTML</h4>
 <hr>
 <button id="btnAttach3" onclick="doAttach(3)">Attach html</button>
 <button id="btnDetach3" onclick="doDetach(3)">Detach html</button>
