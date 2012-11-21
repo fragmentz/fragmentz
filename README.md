@@ -11,8 +11,6 @@ Very much under development. Consider this completely experimental.
 - `html.html(htmlStr, baseUri) : DocumentFragment`  This works.  A document fragment is created using the given HTML string (Chrome 12+ will attempt to load resources at the time the fragment is created; nothing can be done about this). Any relative urls in the fragment are rewritten according to baseUri, and the resulting fragment is returned.  The test-frags.html illustrates this in action.
 
 ## Todo
-- html.css() currently uses a standalone css parser.  this is heavy and slow.  It can probably be changed to use the browser's own facilities for parsing css.  AFAIK, all uplevel browsers allow access to Stylesheets and StylesheetRules of `<style>` elements in the page, and the `disabled` attribute can be used to ensure that a stylesheet doesn't affect the document until rewriting is complete.
-
 - html.html() currently returns a DocumentFragment.  Instead, I think we should consider returning a nicer object that wraps DocumentFragment, and looks a lot like the `CSSFragment` object returned by `html.css()`.  The difference would be that `HtmlFragment.appendTo(someNode)` would need to clone the fragment's contents, allowing a single fragment to be parsed once, and attached many times.
 
 - create AMD plugins for `html` and `css`.  the code in test-frags.html shows roughly what these plugins would do.
